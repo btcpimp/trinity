@@ -955,6 +955,46 @@ class DiscoveryByTopicProtocol(DiscoveryProtocol):
         return tuple(seen_nodes)
 
 
+class StaticDiscoveryService(BaseService):
+    'A stub "discovery service" which does nothing but return the set of preferred peers'
+    preferred_nodes: Tuple[str, ...] = None
+
+    def __init__(
+            self,
+            preferred_nodes: Sequence[kademlia.Node],
+            event_bus: Endpoint,
+            token: CancelToken = None) -> None:
+        super().__init__(token)
+        self._event_bus = event_bus
+
+        self.preferred_nodes = tuple(to_uris(preferred_nodes))
+        self.logger.info('Using static set of peers: %s', self.preferred_nodes)
+
+        self.run_daemon_task(self.handle_get_peer_candidates_requests())
+        self.run_daemon_task(self.handle_get_random_bootnode_requests())
+
+    async def handle_get_peer_candidates_requests(self) -> None:
+        async for event in self._event_bus.stream(PeerCandidatesRequest):
+            self.logger.debug("Servicing request for more peer candidates")
+
+            self._event_bus.broadcast(
+                event.expected_response_type()(self.preferred_nodes),
+                event.broadcast_config()
+            )
+
+    async def handle_get_random_bootnode_requests(self) -> None:
+        async for event in self._event_bus.stream(RandomBootnodeRequest):
+            self.logger.debug("Servicing request for boot nodes")
+
+            self._event_bus.broadcast(
+                event.expected_response_type()(self.preferred_nodes),
+                event.broadcast_config()
+            )
+
+    async def _run(self) -> None:
+        await self.cancel_token.wait()
+
+
 class DiscoveryService(BaseService):
     _last_lookup: float = 0
     _lookup_interval: int = 30
