@@ -5,7 +5,6 @@ from argparse import (
 import asyncio
 from typing import (
     Type,
-    Union,
 )
 
 from eth_typing import (
@@ -93,9 +92,10 @@ class DiscoveryBootstrapService(BaseService):
     Bootstrap discovery to provide a parent ``CancellationToken``
     """
 
-    def __init__(
-            self, disable_discovery: bool, event_bus: Endpoint,
-            trinity_config: TrinityConfig) -> None:
+    def __init__(self,
+                 disable_discovery: bool,
+                 event_bus: Endpoint,
+                 trinity_config: TrinityConfig) -> None:
         super().__init__()
         self.disable_discovery = disable_discovery
         self.event_bus = event_bus
@@ -125,10 +125,8 @@ class DiscoveryBootstrapService(BaseService):
                 self.cancel_token,
             )
 
-        discovery_service: Union[DiscoveryService, StaticDiscoveryService] = None
-
         if self.disable_discovery:
-            discovery_service = StaticDiscoveryService(
+            discovery_service: BaseService = StaticDiscoveryService(
                 self.trinity_config.preferred_nodes,
                 self.event_bus,
                 self.cancel_token,

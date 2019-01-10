@@ -970,9 +970,6 @@ class StaticDiscoveryService(BaseService):
         self.preferred_nodes = tuple(to_uris(preferred_nodes))
         self.logger.info('Using static set of peers: %s', self.preferred_nodes)
 
-        self.run_daemon_task(self.handle_get_peer_candidates_requests())
-        self.run_daemon_task(self.handle_get_random_bootnode_requests())
-
     async def handle_get_peer_candidates_requests(self) -> None:
         async for event in self._event_bus.stream(PeerCandidatesRequest):
             self.logger.debug("Servicing request for more peer candidates")
@@ -992,6 +989,9 @@ class StaticDiscoveryService(BaseService):
             )
 
     async def _run(self) -> None:
+        self.run_daemon_task(self.handle_get_peer_candidates_requests())
+        self.run_daemon_task(self.handle_get_random_bootnode_requests())
+
         await self.cancel_token.wait()
 
 
@@ -1009,9 +1009,6 @@ class DiscoveryService(BaseService):
         self.port = port
         self._event_bus = event_bus
         self._lookup_running = asyncio.Lock()
-
-        self.run_daemon_task(self.handle_get_peer_candidates_requests())
-        self.run_daemon_task(self.handle_get_random_bootnode_requests())
 
     async def handle_get_peer_candidates_requests(self) -> None:
         async for event in self._event_bus.stream(PeerCandidatesRequest):
@@ -1038,6 +1035,9 @@ class DiscoveryService(BaseService):
             )
 
     async def _run(self) -> None:
+        self.run_daemon_task(self.handle_get_peer_candidates_requests())
+        self.run_daemon_task(self.handle_get_random_bootnode_requests())
+
         await self._start_udp_listener()
         self.run_task(self.proto.bootstrap())
         await self.cancel_token.wait()
