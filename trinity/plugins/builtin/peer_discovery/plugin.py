@@ -23,8 +23,8 @@ from p2p.discovery import (
     DiscoveryByTopicProtocol,
     DiscoveryProtocol,
     DiscoveryService,
+    NoopDiscoveryService,
     PreferredNodeDiscoveryProtocol,
-    StaticDiscoveryService,
 )
 from p2p.kademlia import (
     Address,
@@ -126,8 +126,7 @@ class DiscoveryBootstrapService(BaseService):
             )
 
         if self.disable_discovery:
-            discovery_service: BaseService = StaticDiscoveryService(
-                self.trinity_config.preferred_nodes,
+            discovery_service: BaseService = NoopDiscoveryService(
                 self.event_bus,
                 self.cancel_token,
             )
